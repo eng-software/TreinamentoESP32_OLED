@@ -278,4 +278,4 @@ void displayInit()
 - Quando finalizar o *download* clique em **Monitor Device**
 - Pressione o botão ***EN*** para reiniciar a placa
 - Você verá a mensagem ***"Hello Espressif, Hello LVGL."*** rotacionando no display
-
+- Documentação do LVGL https://docs.lvgl.io/8.3/
