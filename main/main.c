@@ -65,13 +65,55 @@ void app_main()
     // LVGL
     //------------------------------------------------
     displayInit();
-        
+    
     lv_obj_t *scr = lv_disp_get_scr_act(NULL);
+
+    //Troque para 1 para mostrar o label
+#if 0    
     lv_obj_t *label = lv_label_create(scr);
     lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR); /* Circular scroll */
     lv_label_set_text(label, "Hello Espressif, Hello LVGL.");    
     lv_obj_set_width(label, EXAMPLE_LCD_H_RES);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);    
+#endif
+
+    //Troque para 1 para desenhar linhas
+#if 0
+    /*Create an array for the points of the line*/
+    static lv_point_t line_points[] = { {10, 10}, {50, 50}, {100, 10} };
+
+    /*Create style*/
+    static lv_style_t style_line;
+    lv_style_init(&style_line);
+    lv_style_set_line_width(&style_line, 1);
+    lv_style_set_line_color(&style_line, lv_color_black());
+    lv_style_set_line_rounded(&style_line, true);
+
+    /*Create a line and apply the new style*/
+    lv_obj_t * line1;
+    line1 = lv_line_create(lv_scr_act());    
+    lv_line_set_points(line1, line_points, sizeof(line_points)/sizeof(lv_point_t));     /*Set the points*/
+    lv_obj_add_style(line1, &style_line, 0);
+    lv_obj_center(line1);
+#endif
+
+    //Troque para 1 para mostrar o gráfico
+#if 1
+    /*Create a chart*/
+    lv_obj_t * chart;
+    chart = lv_chart_create(lv_scr_act());
+    lv_obj_set_size(chart, 128, 50);
+    lv_obj_set_align(chart, LV_ALIGN_TOP_LEFT);
+    lv_obj_set_pos(chart, 0, 10);
+
+    /*Add two data series*/
+    lv_chart_series_t * ser1 = lv_chart_add_series(chart, lv_color_black(), LV_CHART_AXIS_PRIMARY_Y);         
+    for(uint32_t i = 0; i < 10; i++) 
+    {        
+        lv_chart_set_next_value(chart, ser1, i*10);
+    }
+#endif
+
 }
 
 
