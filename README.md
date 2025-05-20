@@ -35,11 +35,11 @@ Essa etapa iremos configurar a porta I2C e construir um scanner para identificar
 #include "esp_err.h"
 #include "esp_log.h"
 
+static const char *TAG = "example";
+
 #define I2C_BUS_PORT            0
 #define EXAMPLE_PIN_NUM_SDA     5
 #define EXAMPLE_PIN_NUM_SCL     4
-
-static const char *TAG = "example";
 
 /**
  * @brief Entry point of the application.
@@ -52,9 +52,9 @@ static const char *TAG = "example";
  */
 void app_main() 
 {
-    //------------------------------------------------
-    // I2C scan
-    //------------------------------------------------
+    //---------------------------------
+    // I2C Scanner
+    //---------------------------------
     ESP_LOGI(TAG, "Initialize I2C bus");    
     i2c_master_bus_handle_t i2c_bus = NULL;    
     i2c_master_bus_config_t bus_config = 
@@ -78,7 +78,6 @@ void app_main()
         }                    
     }
     i2c_del_master_bus(i2c_bus);
-    //---------------------
 }
 ```
 - Clique no ícone da *Espressif*
