@@ -12,13 +12,26 @@
 
 static const char *TAG = "example";
 
-#define I2C_BUS_PORT            0
-#define EXAMPLE_PIN_NUM_SDA     5
-#define EXAMPLE_PIN_NUM_SCL     4
+//I2C Port Configuration
+#define I2C_DISPLAY_BUS_PORT     0
+#define I2C_DISPLAY_SDA          5
+#define I2C_DISPLAY_SCL          4
+
+//I2C Bus Handler and Configuration
+i2c_master_bus_handle_t i2c_display_bus = NULL;    
+i2c_master_bus_config_t display_bus_config = 
+{
+    .clk_source = I2C_CLK_SRC_DEFAULT,
+    .glitch_ignore_cnt = 7,
+    .i2c_port = I2C_DISPLAY_BUS_PORT,
+    .sda_io_num = I2C_DISPLAY_SDA,
+    .scl_io_num = I2C_DISPLAY_SCL,
+    .flags.enable_internal_pullup = true,
+};
 
 // The pixel number in horizontal and vertical
-#define EXAMPLE_LCD_H_RES              128
-#define EXAMPLE_LCD_V_RES              64
+#define LCD_H_RES              128
+#define LCD_V_RES              64
 void displayInit();
 
 /**
@@ -37,28 +50,18 @@ void app_main()
     // I2C scan
     //------------------------------------------------
     ESP_LOGI(TAG, "Initialize I2C bus");    
-    i2c_master_bus_handle_t i2c_bus = NULL;    
-    i2c_master_bus_config_t bus_config = 
-    {
-        .clk_source = I2C_CLK_SRC_DEFAULT,
-        .glitch_ignore_cnt = 7,
-        .i2c_port = I2C_BUS_PORT,
-        .sda_io_num = EXAMPLE_PIN_NUM_SDA,
-        .scl_io_num = EXAMPLE_PIN_NUM_SCL,
-        .flags.enable_internal_pullup = true,
-    };
-    ESP_ERROR_CHECK(i2c_new_master_bus(&bus_config, &i2c_bus));
+
+    ESP_ERROR_CHECK(i2c_new_master_bus(&display_bus_config, &i2c_display_bus));
 
     printf("Scanning I2C bus...\n");
     for (int i = 1; i < 127; i++) 
     {
-        esp_err_t err = i2c_master_probe(i2c_bus, i, -1);
+        esp_err_t err = i2c_master_probe(i2c_display_bus, i, -1);
         if (err == ESP_OK) 
         {
             printf("Found device at 0x%02x\n", i);                
         }                    
-    }
-    i2c_del_master_bus(i2c_bus);
+    }    
     //---------------------
     
     //------------------------------------------------
@@ -66,33 +69,21 @@ void app_main()
     //------------------------------------------------
     displayInit();
         
+
+    //------------------------------------------------
+    // Create a Label
+    //------------------------------------------------
     lv_obj_t *scr = lv_disp_get_scr_act(NULL);
     lv_obj_t *label = lv_label_create(scr);
     lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR); /* Circular scroll */
     lv_label_set_text(label, "Hello Espressif, Hello LVGL.");    
-    lv_obj_set_width(label, EXAMPLE_LCD_H_RES);
+    lv_obj_set_width(label, LCD_H_RES);
     lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);    
 }
 
 
 void displayInit()
 {
-    //------------------------------------------------
-    // I2C Initialization
-    //------------------------------------------------
-    ESP_LOGI(TAG, "Initialize I2C bus");    
-    i2c_master_bus_handle_t i2c_bus = NULL;    
-    i2c_master_bus_config_t bus_config = 
-    {
-        .clk_source = I2C_CLK_SRC_DEFAULT,
-        .glitch_ignore_cnt = 7,
-        .i2c_port = I2C_BUS_PORT,
-        .sda_io_num = EXAMPLE_PIN_NUM_SDA,
-        .scl_io_num = EXAMPLE_PIN_NUM_SCL,
-        .flags.enable_internal_pullup = true,
-    };
-    ESP_ERROR_CHECK(i2c_new_master_bus(&bus_config, &i2c_bus));
-    
     //------------------------------------------------
     // SSD1306 Initialization
     //------------------------------------------------
@@ -107,7 +98,7 @@ void displayInit()
         .lcd_param_bits      = 8,   // According to SSD1306 datasheet
         .dc_bit_offset       = 6,   // According to SSD1306 datasheet
     };
-    ESP_ERROR_CHECK(esp_lcd_new_panel_io_i2c(i2c_bus, &io_config, &io_handle));
+    ESP_ERROR_CHECK(esp_lcd_new_panel_io_i2c(i2c_display_bus, &io_config, &io_handle));
     
 
     ESP_LOGI(TAG, "Install SSD1306 panel driver");
@@ -119,7 +110,7 @@ void displayInit()
     };
     esp_lcd_panel_ssd1306_config_t ssd1306_config = 
     {
-        .height = EXAMPLE_LCD_V_RES,
+        .height = LCD_V_RES,
     };
     panel_config.vendor_config = &ssd1306_config;
     ESP_ERROR_CHECK(esp_lcd_new_panel_ssd1306(io_handle, &panel_config, &panel_handle));
@@ -140,10 +131,10 @@ void displayInit()
     {
         .io_handle = io_handle,
         .panel_handle = panel_handle,
-        .buffer_size = EXAMPLE_LCD_H_RES * EXAMPLE_LCD_V_RES,
+        .buffer_size = LCD_H_RES * LCD_V_RES,
         .double_buffer = true,
-        .hres = EXAMPLE_LCD_H_RES,
-        .vres = EXAMPLE_LCD_V_RES,
+        .hres = LCD_H_RES,
+        .vres = LCD_V_RES,
         .monochrome = true,
         .rotation = 
         {
