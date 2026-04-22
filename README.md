@@ -8,6 +8,7 @@
 - Visual Studio Code
 - ESP-IDF 5.3.0 (instalado e configurado)
 - Python 3.9+
+- Ambiente de desenvolvimento **https://www.youtube.com/watch?v=1u9h4_O1yQg**
   
 
 ## 🧱 Etapa 1 – Criar Projeto Base no VSCode
