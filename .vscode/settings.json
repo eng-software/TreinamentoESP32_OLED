@@ -4,7 +4,7 @@
   "idf.toolsPathWin": "c:\\EspressifVS",
   "idf.pythonInstallPath": "c:\\EspressifVS\\tools\\idf-python\\3.11.2\\python.exe",
   "idf.flashType": "UART",
-  "idf.portWin": "COM17",
+  "idf.portWin": "COM16",
   "idf.customExtraVars": {
     "OPENOCD_SCRIPTS": "C:\\Users\\henrique.coser\\.espressif\\tools\\openocd-esp32\\v0.12.0-esp32-20230921/openocd-esp32/share/openocd/scripts",
     "IDF_CCACHE_ENABLE": "1",
@@ -16,5 +16,6 @@
     "i2c.h": "c",
     "esp_lvgl_port.h": "c",
     "cstdlib": "c"
-  }
+  },
+  "idf.currentSetup": "C:\\esp-idf\\v5.3.5\\esp-idf"
 }

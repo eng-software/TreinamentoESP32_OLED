@@ -1,12 +1,13 @@
 #include "driver/i2c_master.h"
+#include "driver/gpio.h"
 #include <stdio.h>
 #include "esp_err.h"
 #include "esp_log.h"
-
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 #include "esp_lcd_panel_io.h"
 #include "esp_lcd_panel_ops.h"
 #include "esp_lcd_panel_vendor.h"
-
 #include "esp_lvgl_port.h"
 #include "lvgl.h"
 
@@ -19,7 +20,18 @@ static const char *TAG = "example";
 // The pixel number in horizontal and vertical
 #define EXAMPLE_LCD_H_RES              128
 #define EXAMPLE_LCD_V_RES              64
+
+
+#define LED_PIN     GPIO_NUM_16  
+
+int counter;
+
+/*
+    PROTOTYPES
+*/
 void displayInit();
+void statusLedTask(void *pvParameters);
+
 
 /**
  * @brief Entry point of the application.
@@ -32,89 +44,52 @@ void displayInit();
  */
 void app_main() 
 {
-
     //------------------------------------------------
-    // I2C scan
+    // Status LED
     //------------------------------------------------
-    ESP_LOGI(TAG, "Initialize I2C bus");    
-    i2c_master_bus_handle_t i2c_bus = NULL;    
-    i2c_master_bus_config_t bus_config = 
-    {
-        .clk_source = I2C_CLK_SRC_DEFAULT,
-        .glitch_ignore_cnt = 7,
-        .i2c_port = I2C_BUS_PORT,
-        .sda_io_num = EXAMPLE_PIN_NUM_SDA,
-        .scl_io_num = EXAMPLE_PIN_NUM_SCL,
-        .flags.enable_internal_pullup = true,
-    };
-    ESP_ERROR_CHECK(i2c_new_master_bus(&bus_config, &i2c_bus));
+    gpio_set_direction(LED_PIN, GPIO_MODE_OUTPUT);
+    xTaskCreate(statusLedTask, "statusLedTask", 4096, NULL, 1, NULL);
 
-    printf("Scanning I2C bus...\n");
-    for (int i = 1; i < 127; i++) 
-    {
-        esp_err_t err = i2c_master_probe(i2c_bus, i, -1);
-        if (err == ESP_OK) 
-        {
-            printf("Found device at 0x%02x\n", i);                
-        }                    
-    }
-    i2c_del_master_bus(i2c_bus);
-    //---------------------
-    
     //------------------------------------------------
     // LVGL
     //------------------------------------------------
     displayInit();
     
+    //------------------------------------------------
+    // Create a Label
+    //------------------------------------------------
+    lvgl_port_lock(portMAX_DELAY);
     lv_obj_t *scr = lv_disp_get_scr_act(NULL);
+        
+    lv_obj_t *lblCounter = lv_label_create(scr);    
+    lv_label_set_text_fmt(lblCounter, "Contador: %d", counter);    
+    lv_obj_set_width(lblCounter, EXAMPLE_LCD_H_RES);
+    lv_obj_align(lblCounter, LV_ALIGN_TOP_MID, 0, 0);    
+    lv_obj_set_y(lblCounter, 0);
 
-    //Troque para 1 para mostrar o label
-#if 0    
-    lv_obj_t *label = lv_label_create(scr);
-    lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR); /* Circular scroll */
-    lv_label_set_text(label, "Hello Espressif, Hello LVGL.");    
-    lv_obj_set_width(label, EXAMPLE_LCD_H_RES);
-    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);    
-#endif
+    lvgl_port_unlock();
 
-    //Troque para 1 para desenhar linhas
-#if 0
-    /*Create an array for the points of the line*/
-    static lv_point_t line_points[] = { {10, 10}, {50, 50}, {100, 10} };
-
-    /*Create style*/
-    static lv_style_t style_line;
-    lv_style_init(&style_line);
-    lv_style_set_line_width(&style_line, 1);
-    lv_style_set_line_color(&style_line, lv_color_black());
-    lv_style_set_line_rounded(&style_line, true);
-
-    /*Create a line and apply the new style*/
-    lv_obj_t * line1;
-    line1 = lv_line_create(lv_scr_act());    
-    lv_line_set_points(line1, line_points, sizeof(line_points)/sizeof(lv_point_t));     /*Set the points*/
-    lv_obj_add_style(line1, &style_line, 0);
-    lv_obj_center(line1);
-#endif
-
-    //Troque para 1 para mostrar o gráfico
-#if 1
-    /*Create a chart*/
-    lv_obj_t * chart;
-    chart = lv_chart_create(lv_scr_act());
-    lv_obj_set_size(chart, 128, 50);
-    lv_obj_set_align(chart, LV_ALIGN_TOP_LEFT);
-    lv_obj_set_pos(chart, 0, 10);
-
-    /*Add two data series*/
-    lv_chart_series_t * ser1 = lv_chart_add_series(chart, lv_color_black(), LV_CHART_AXIS_PRIMARY_Y);         
-    for(uint32_t i = 0; i < 10; i++) 
-    {        
-        lv_chart_set_next_value(chart, ser1, i*10);
-    }
-#endif
-
+    while(1)
+    {
+        lvgl_port_lock(portMAX_DELAY);        
+        counter++;
+        lv_label_set_text_fmt(lblCounter, "Contador: %d", counter);   
+        lvgl_port_unlock();
+        vTaskDelay(1000/portTICK_PERIOD_MS);
+        
+    }    
 }
+
+void statusLedTask(void *pvParameters) 
+{
+    while(1)
+    {
+        gpio_set_level(LED_PIN, 1);
+        vTaskDelay(250/portTICK_PERIOD_MS);
+        gpio_set_level(LED_PIN, 0);
+        vTaskDelay(250/portTICK_PERIOD_MS);
+    }
+}   
 
 
 void displayInit()
